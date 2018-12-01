@@ -79,4 +79,7 @@ class SoundCloud{
 			return $ex;
 		}
 	}
+	public function getLastError(){
+	    return $this->mLastError;
+    }
 }

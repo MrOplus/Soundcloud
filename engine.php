@@ -6,7 +6,7 @@ if(isset($_GET['musicLink']) && isset($_GET['desktop'])){
 		echo("error");
 	}else{
 	$details = $s->getLink();
-		if($s->LastErr == 0){
+		if($s->getLastError() == 0){
 			$title = $details['title'];
 			$title = str_replace("|","-",$title);
 			$mp3link = $details['mp3link'];
@@ -22,12 +22,12 @@ if(isset($_GET['musicLink']) && isset($_GET['desktop'])){
 	}
 }else if(isset($_GET['musicLink'])){
 $s = new SoundCloud($_GET['musicLink']);
-	if($s->LastErr == -1){
+	if($s->getLastError() == -1){
 		$output = array("status" => "404 - Not Found");
 		echo(json_encode($output));	
 	}else{
 	$details = $s->getLink();
-		if($s->LastErr == 0){
+		if($s->getLastError() == 0){
 			$title = $details['title'];
 			$mp3link = $details['mp3link'];
 			if(isset($details['rtmplink'])){
