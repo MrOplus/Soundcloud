@@ -1,48 +1,48 @@
 <?php
 class SoundCloud{
-	private $_link ;
-	public $LastErr = 0;
+	private $mLink = "" ;
+	private $mLastError = 0 ;
+	private $mClientId = "q241TWlfmzYAESNz2Y7GNCbSGeQ6mKL2";
+	private $mAppVersion = "1543583184";
+	private $mResolverApi = "https://api.soundcloud.com/resolve?";
 	function __construct($link){
 		$host = parse_url($link,PHP_URL_HOST);
 		if($host == "soundcloud.com"){
-	 		$this->_link = $link;
+	 		$this->mLink = $link;
 		}else{
-			$this->LastErr = -1;
+			$this->mLastError = -1;
 		}
 	}
-	public function GetLink(){
+	public function getLink(){
 		try{
-			$client_id = "UytiOw5CoZz7YuKteRrXYZQcGjwGohXl" ;
-			$app_version = "1515756093" ;
-			$current_encode = urlencode($this->_link);
-			$resolveUrl = "https://api.soundcloud.com/resolve?" ;
+			$encoded_url = urlencode($this->mLink);
 			$resolveFields = array(
-				"url" => $current_encode,
+				"url" => $encoded_url,
 				"_status_code_map%5B302%5D" =>"200",
 				"_status_format"=>"json",
-				"client_id"=>$client_id,
-				"app_version"=>$app_version);	
-			$resolveRes = $this->SendGet($resolveUrl,$resolveFields);
+				"client_id"=> $this->mClientId,
+				"app_version"=> $this->mAppVersion);
+			$resolveRes = $this->makeRequest($this->mResolverApi,$resolveFields);
 			$resolveJson = json_decode($resolveRes,true);
 			if (isset($resolveJson['status']) && $resolveJson['status'] == '302 - Found'){
-				$xmlString =$this->SendGet($resolveJson['location']);
-				$xmljson = json_decode($xmlString) ;				
-				$id = $xmljson->id;
-				$title = $xmljson->title;
-				$finalLink = "https://api.soundcloud.com/i1/tracks/" . $id .
-				"/streams?client_id=$client_id&app_version=$app_version";
-				$finalRequest = $this->SendGet($finalLink);
-				$finalJson = json_decode($finalRequest,true);
+				$info = $this->makeRequest($resolveJson['location']);
+				$infoJson = json_decode($info,true) ;
+				$id = $infoJson['id'];
+				$title = $infoJson['title'];
+				$cdnUrl = "https://api.soundcloud.com/i1/tracks/" . $id .
+				"/streams?client_id=$this->mClientId&app_version=$this->mAppVersion";
+				$cdnRequest = $this->makeRequest($cdnUrl);
+				$cdnJson = json_decode($cdnRequest,true);
 				if(isset($finalJson['rtmp_mp3_128_url'])){
 					$return = array(
 						"title" => (string) $title,
-						"mp3link" => $finalJson['http_mp3_128_url'],
-						"rtmplink" => $finalJson['rtmp_mp3_128_url']
+						"mp3link" => $cdnJson['http_mp3_128_url'],
+						"rtmplink" => $cdnJson['rtmp_mp3_128_url']
 					);
 				}else{
 					$return = array(
 						"title" => (string) $title,
-						"mp3link" => $finalJson['http_mp3_128_url']
+						"mp3link" => $cdnJson['http_mp3_128_url']
 					);
 				}
 				return $return;
@@ -65,7 +65,7 @@ class SoundCloud{
 			return $return;				
 		}
 	}
-	private function SendGet($url,$fields = ''){
+	private function makeRequest($url,$fields = ''){
 		try{
 			$fields_string = '' ;
 			if($fields != '' ){
@@ -80,4 +80,3 @@ class SoundCloud{
 		}
 	}
 }
-?>
